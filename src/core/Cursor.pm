@@ -42,7 +42,7 @@ my class Cursor does NQPCursorRole {
                             nqp::iscclass(nqp::const::CCLASS_NUMERIC, $name, 0)
                                 ?? nqp::bindpos(
                                         nqp::if(nqp::isconcrete($list), $list, ($list := nqp::list())),
-                                        nqp::fromstr_i($name), [])
+                                        nqp::bind(my int $, $name), [])
                                 !! nqp::bindkey($hash, $name, []);
                         }
                     }
@@ -53,13 +53,13 @@ my class Cursor does NQPCursorRole {
             my Mu $cs := nqp::getattr(self, Cursor, '$!cstack');
             if !nqp::isnull($cs) && nqp::istrue($cs) {
                 my int $cselems = nqp::elems($cs);
-                my int $csi = 0;
+                my int $csi     = 0;
                 while $csi < $cselems {
-                    my $subcur   := nqp::atpos($cs, $csi);
-                    my $submatch := $subcur.MATCH;
-                    my $name     := nqp::getattr($subcur, $?CLASS, '$!name');
+                    my Mu $subcur   := nqp::atpos($cs, $csi);
+                    my Mu $submatch := $subcur.MATCH;
+                    my Mu $name     := nqp::getattr($subcur, $?CLASS, '$!name');
                     if !nqp::isnull($name) && nqp::defined($name) {
-                        if $name ne '' && nqp::ordat($name, 0) == 36 && ($name eq '$!from' || $name eq '$!to') {
+                        if $name ne '' && nqp::eqat($name, '$', 0) && ($name eq '$!from' || $name eq '$!to') {
                             nqp::bindattr_i($match, Match, $name, $submatch.from);
                         }
                         elsif nqp::index($name, '=') < 0 {
@@ -75,8 +75,8 @@ my class Cursor does NQPCursorRole {
                             if nqp::iscclass(nqp::const::CCLASS_NUMERIC, $name, 0) {
                                 $list := nqp::list() unless nqp::isconcrete($list);
                                 $needs_list
-                                    ?? nqp::atpos($list, nqp::fromstr_i($name)).push($submatch)
-                                    !! nqp::bindpos($list, nqp::fromstr_i($name), $submatch);
+                                    ?? nqp::atpos($list, nqp::bind(my int $, nqp::unbox_s($name))).push($submatch)
+                                    !! nqp::bindpos($list, nqp::bind(my int $, nqp::unbox_s($name)), $submatch);
                             }
                             else {
                                 $needs_list
@@ -88,8 +88,8 @@ my class Cursor does NQPCursorRole {
                             my Mu $names := nqp::split('=', $name);
                             my $iter     := nqp::iterator($names);
                             while $iter {
-                                my $name := nqp::shift($iter);
-                                my Mu $capval     := nqp::atkey($caplist, $name);
+                                my str $name   = nqp::unbox_s(nqp::shift($iter));
+                                my Mu $capval := nqp::atkey($caplist, $name);
 #?if jvm
                                 my int $needs_list = nqp::isconcrete($capval) &&
                                     ((nqp::isint($capval) && nqp::isge_i($capval, 2)) ||
@@ -101,8 +101,8 @@ my class Cursor does NQPCursorRole {
                                 if nqp::iscclass(nqp::const::CCLASS_NUMERIC, $name, 0) {
                                     $list := nqp::list() unless nqp::isconcrete($list);
                                     $needs_list
-                                        ?? nqp::atpos($list, nqp::fromstr_i($name)).push($submatch)
-                                        !! nqp::bindpos($list, nqp::fromstr_i($name), $submatch);
+                                        ?? nqp::atpos($list, nqp::bind(my int $, $name)).push($submatch)
+                                        !! nqp::bindpos($list, nqp::bind(my int $, $name), $submatch);
                                 }
                                 else {
                                     $needs_list
